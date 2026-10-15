@@ -45,7 +45,19 @@ function Module.LayerController:Update(layer, hide)
   local newState = layer.State() and not hide
 
   if newState ~= layer.PreviousState then
-    Uci.SetLayerVisibility(self.Page, layer.Name, newState, layer.Transition or self.DefaultTransition)
+    local transition = layer.Transition or self.DefaultTransition
+    local ok, err = pcall(Uci.SetLayerVisibility, self.Page, layer.Name, newState, transition)
+    if not ok then
+      error(string.format(
+        "uci-plus: Failed to set layer visibility. Check that the page and layer names exist in your design.\n" ..
+        "  Page: '%s'\n" ..
+        "  Layer: '%s'\n" ..
+        "  State: %s\n" ..
+        "  Transition: '%s'\n" ..
+        "  Error: %s",
+        tostring(self.Page), tostring(layer.Name), tostring(newState), tostring(transition), tostring(err)
+      ), 2)
+    end
     if self.Debug then
       print("LayerControllerUpdate:", layer.Name, 'New State = ', tostring(newState))
     end
